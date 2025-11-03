@@ -19,8 +19,12 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login({ username, password });
-      navigate('/dashboard');
+      const user = await login({ username, password });
+      if (user) {
+        navigate('/dashboard');
+      } else {
+        setError('Login failed. Please check your credentials.');
+      }
     } catch {
       setError('Login failed. Please check your credentials.');
     } finally {

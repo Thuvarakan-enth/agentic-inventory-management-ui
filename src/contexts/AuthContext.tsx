@@ -7,10 +7,10 @@ import { authService } from '../services/api';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<User>;
   signup: (userData: SignupRequest) => Promise<void>;
   logout: () => void;
-  isAdmin: () => boolean;
+  isAdmin: () => boolean | undefined;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +38,7 @@ interface JWTPayload {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
+  //const [user, setUser] = useState<User | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -68,26 +69,42 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const login = async (credentials: LoginRequest) => {
+    setLoading(true);
     try {
       const response = await authService.login(credentials);
+      console.log('Login response:', response);
       localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      setUser(response.user);
+      //Convert response to User type
+      const user: User = {
+        type: response.type,
+        username: response.username,
+        email: response.email,
+        roles: response.roles,
+      };
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+      return user;
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signup = async (userData: SignupRequest) => {
+    setLoading(true);
     try {
       const response = await authService.signup(userData);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      setUser(response.user);
+      if(!response) {
+        throw new Error('No response from signup');
+      }
+      await login({ username: userData.username, password: userData.password });
     } catch (error) {
       console.error('Signup failed:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,7 +114,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const isAdmin = () => {
-    return user?.role === 'ADMIN';
+    return user?.roles.includes('ADMIN');
   };
 
   return (

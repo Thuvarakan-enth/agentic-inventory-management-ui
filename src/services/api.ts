@@ -54,7 +54,7 @@ export const authService = {
   },
 
   signup: async (userData: SignupRequest): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/auth/signup', userData);
+    const response = await api.post<AuthResponse>('/auth/register', userData);
     return response.data;
   },
 

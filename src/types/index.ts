@@ -1,8 +1,8 @@
 export interface User {
-  id: number;
+  type: string;
   username: string;
   email: string;
-  role: 'ADMIN' | 'USER';
+  roles: string[];
 }
 
 export interface LoginRequest {
@@ -18,7 +18,10 @@ export interface SignupRequest {
 
 export interface AuthResponse {
   token: string;
-  user: User;
+  type: string;
+  username: string;
+  email: string;
+  roles: string[];
 }
 
 export interface Product {
