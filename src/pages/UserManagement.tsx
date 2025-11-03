@@ -30,13 +30,13 @@ const UserManagement = () => {
     }
   };
 
-  const handleDeleteUser = async (id: number) => {
+  const handleDeleteUser = async (username: string) => {
     if (!window.confirm('Are you sure you want to delete this user?')) {
       return;
     }
 
     try {
-      await userService.deleteUser(id);
+      await userService.deleteUser(username);
       await loadUsers();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to delete user';
@@ -56,7 +56,7 @@ const UserManagement = () => {
           <h1>User Management</h1>
           <div className="user-info">
             <span className="user-name">{currentUser?.username}</span>
-            <span className="user-role">{currentUser?.role}</span>
+            <span className="user-role">{currentUser?.roles}</span>
             <button onClick={logout} className="btn btn-secondary">Logout</button>
           </div>
         </div>
@@ -99,19 +99,18 @@ const UserManagement = () => {
                   </tr>
                 ) : (
                   filteredUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td>{user.id}</td>
+                    <tr key={user.username}>
                       <td>{user.username}</td>
                       <td>{user.email}</td>
                       <td>
-                        <span className={`role-badge role-${user.role.toLowerCase()}`}>
-                          {user.role}
+                        <span className={`role-badge role-${user.roles[0].toLowerCase()}`}>
+                          {user.roles[0]}
                         </span>
                       </td>
                       <td>
-                        {currentUser?.id !== user.id && (
+                        {currentUser?.email !== user.email && (
                           <button
-                            onClick={() => handleDeleteUser(user.id)}
+                            onClick={() => handleDeleteUser(user.username)}
                             className="btn btn-small btn-danger"
                           >
                             Delete
