@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (credentials: LoginRequest) => Promise<User>;
-  signup: (userData: SignupRequest) => Promise<void>;
+  signup: (userData: SignupRequest) => Promise<User>;
   logout: () => void;
   isAdmin: () => boolean | undefined;
 }
@@ -96,12 +96,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setLoading(true);
     try {
       const response = await authService.signup(userData);
-      if(!response) {
-        throw new Error('No response from signup');
-      }
-      await login({ username: userData.username, password: userData.password });
+      console.log('Signup response:', response);
+      localStorage.setItem('token', response.token);
+      //Convert response to User type
+      const user: User = {
+        type: response.type,
+        username: response.username,
+        email: response.email,
+        roles: response.roles,
+      };
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+      return user;
     } catch (error) {
-      console.error('Signup failed:', error);
+      console.error('Login failed:', error);
       throw error;
     } finally {
       setLoading(false);
