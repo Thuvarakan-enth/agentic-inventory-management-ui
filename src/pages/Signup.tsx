@@ -33,7 +33,7 @@ const Signup = () => {
 
     try {
       const user = await signup({ username, email, password });
-      if (user?.errorMessage !== '') {
+      if (user?.errorMessage !== '' || user?.errorMessage != null) {
         setError(user.errorMessage || 'Signup failed. Please try again.');
       } else if (user) {
         navigate('/dashboard');
