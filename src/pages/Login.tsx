@@ -20,7 +20,7 @@ const Login = () => {
 
     try {
       const user = await login({ username, password });
-      if (user?.errorMessage !== '' || user?.errorMessage != null) {
+      if (user?.errorMessage !== '' && user?.errorMessage != null) {
         setError(user.errorMessage || 'Login failed. Please try again.');
       } else if (user) {
         navigate('/dashboard');
