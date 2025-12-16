@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { userService } from '../services/api';
 import type { User } from '../types';
-import '../styles/UserManagement.css';
+import Navigation from '../components/Navigation';
+import '../styles/Suppliers.css';
 
 const UserManagement = () => {
-  const { user: currentUser, logout } = useAuth();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -50,80 +50,72 @@ const UserManagement = () => {
   );
 
   return (
-    <div className="user-management">
-      <header className="dashboard-header">
-        <div className="header-content">
+    <div className="page-with-nav">
+      <Navigation />
+      <div className="page-content">
+        <div className="page-header">
           <h1>User Management</h1>
-          <div className="user-info">
-            <span className="user-name">{currentUser?.username}</span>
-            <span className="user-role">{currentUser?.roles}</span>
-            <button onClick={logout} className="btn btn-secondary">Logout</button>
+        </div>
+
+        <div className="content-wrapper">
+          <div className="toolbar">
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
           </div>
-        </div>
-      </header>
 
-      <div className="dashboard-content">
-        <div className="toolbar">
-          <input
-            type="text"
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-          <Link to="/dashboard" className="btn btn-secondary">
-            Back to Dashboard
-          </Link>
-        </div>
+          {error && <div className="error-message">{error}</div>}
 
-        {error && <div className="error-message">{error}</div>}
-
-        {loading ? (
-          <div className="loading">Loading users...</div>
-        ) : (
-          <div className="users-table-container">
-            <table className="users-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="no-users">No users found</td>
-                  </tr>
-                ) : (
-                  filteredUsers.map((user) => (
-                    <tr key={user.username}>
-                      <td>{user.username}</td>
-                      <td>{user.email}</td>
-                      <td>
-                        <span className={`role-badge role-${user.roles[0].toLowerCase()}`}>
-                          {user.roles[0]}
-                        </span>
-                      </td>
-                      <td>
-                        {currentUser?.email !== user.email && (
-                          <button
-                            onClick={() => handleDeleteUser(user.username)}
-                            className="btn btn-small btn-danger"
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </td>
+          {loading ? (
+            <div className="loading">Loading users...</div>
+          ) : (
+            <div className="table-container">
+              {filteredUsers.length === 0 ? (
+                <p className="no-data">No users found</p>
+              ) : (
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Username</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Actions</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((user) => (
+                      <tr key={user.username}>
+                        <td>{user.username}</td>
+                        <td>{user.email}</td>
+                        <td>
+                          <span className={`role-badge role-${user.roles[0].toLowerCase()}`}>
+                            {user.roles[0]}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            {currentUser?.email !== user.email && (
+                              <button
+                                onClick={() => handleDeleteUser(user.username)}
+                                className="btn btn-small btn-danger"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

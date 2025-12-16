@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { productService } from '../services/api';
 import type { Product, ProductCreateRequest } from '../types';
+import Navigation from '../components/Navigation';
 import ProductModal from '../components/ProductModal';
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -43,7 +43,7 @@ const Dashboard = () => {
     setShowModal(true);
   };
 
-  const handleDeleteProduct = async (id: number) => {
+  const handleDeleteProduct = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this product?')) {
       return;
     }
@@ -60,8 +60,8 @@ const Dashboard = () => {
   const handleSaveProduct = async (productData: ProductCreateRequest) => {
     try {
       if (editingProduct) {
-        await productService.updateProduct(editingProduct.id, {
-          id: editingProduct.id,
+        await productService.updateProduct(editingProduct.productId, {
+          productId: editingProduct.productId,
           ...productData
         });
       } else {
@@ -76,95 +76,98 @@ const Dashboard = () => {
   };
 
   const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.description.toLowerCase().includes(searchTerm.toLowerCase())
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="dashboard">
-      <header className="dashboard-header">
-        <div className="header-content">
-          <h1>Inventory Management Dashboard</h1>
-          <div className="user-info">
-            <span className="user-name">{user?.username}</span>
-            <span className="user-role">{user?.roles[1] ? user.roles[1] : user?.roles[0]}</span>
-            <button onClick={logout} className="btn btn-secondary">Logout</button>
-          </div>
+    <div className="page-with-nav">
+      <Navigation />
+      <div className="page-content">
+        <div className="page-header">
+          <h1>Inventory Management</h1>
         </div>
-      </header>
 
-      <div className="dashboard-content">
-        <div className="toolbar">
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-          <div className="toolbar-actions">
+        <div className="content-wrapper">
+          <div className="toolbar">
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
             {isAdmin() && (
-              <>
-                <Link to="/users" className="btn btn-secondary">
-                  User Management
-                </Link>
-                <button onClick={handleAddProduct} className="btn btn-primary">
-                  Add Product
-                </button>
-              </>
+              <button onClick={handleAddProduct} className="btn btn-primary">
+                Add Product
+              </button>
             )}
           </div>
+
+          {error && <div className="error-message">{error}</div>}
+
+          {loading ? (
+            <div className="loading">Loading products...</div>
+          ) : (
+            <div className="table-container">
+              {filteredProducts.length === 0 ? (
+                <p className="no-data">No products found</p>
+              ) : (
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Product ID</th>
+                      <th>Name</th>
+                      <th>Latest Batch</th>
+                      <th>Remaining Qty</th>
+                      <th>Unit Price</th>
+                      <th>Last Updated</th>
+                      {isAdmin() && <th>Actions</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.map((product) => (
+                      <tr key={product.productId}>
+                        <td>{product.productId}</td>
+                        <td>{product.name}</td>
+                        <td>{product.latestBatchNo || '-'}</td>
+                        <td>{product.remainingQty}</td>
+                        <td>${product.latestUnitPrice.toFixed(2)}</td>
+                        <td>{new Date(product.updatedAt).toLocaleDateString()}</td>
+                        {isAdmin() && (
+                          <td>
+                            <div className="action-buttons">
+                              <button
+                                onClick={() => handleEditProduct(product)}
+                                className="btn btn-small btn-secondary"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProduct(product.productId)}
+                                className="btn btn-small btn-danger"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
         </div>
 
-        {error && <div className="error-message">{error}</div>}
-
-        {loading ? (
-          <div className="loading">Loading products...</div>
-        ) : (
-          <div className="products-grid">
-            {filteredProducts.length === 0 ? (
-              <p className="no-products">No products found</p>
-            ) : (
-              filteredProducts.map((product) => (
-                <div key={product.id} className="product-card">
-                  <h3>{product.name}</h3>
-                  <p className="product-description">{product.description}</p>
-                  <div className="product-details">
-                    <span className="product-category">{product.category}</span>
-                    <span className="product-quantity">Qty: {product.quantity}</span>
-                    <span className="product-price">${product.price.toFixed(2)}</span>
-                  </div>
-                  {isAdmin() && (
-                    <div className="product-actions">
-                      <button 
-                        onClick={() => handleEditProduct(product)} 
-                        className="btn btn-small btn-secondary"
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteProduct(product.id)} 
-                        className="btn btn-small btn-danger"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
+        {showModal && (
+          <ProductModal
+            product={editingProduct}
+            onSave={handleSaveProduct}
+            onClose={() => setShowModal(false)}
+          />
         )}
       </div>
-
-      {showModal && (
-        <ProductModal
-          product={editingProduct}
-          onSave={handleSaveProduct}
-          onClose={() => setShowModal(false)}
-        />
-      )}
     </div>
   );
 };

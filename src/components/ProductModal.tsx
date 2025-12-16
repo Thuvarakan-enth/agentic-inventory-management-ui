@@ -11,20 +11,16 @@ interface ProductModalProps {
 
 const ProductModal = ({ product, onSave, onClose }: ProductModalProps) => {
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [quantity, setQuantity] = useState(0);
-  const [price, setPrice] = useState(0);
-  const [category, setCategory] = useState('');
+  const [remainingQty, setRemainingQty] = useState(0);
+  const [latestUnitPrice, setLatestUnitPrice] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (product) {
       setName(product.name);
-      setDescription(product.description);
-      setQuantity(product.quantity);
-      setPrice(product.price);
-      setCategory(product.category);
+      setRemainingQty(product.remainingQty);
+      setLatestUnitPrice(product.latestUnitPrice);
     }
   }, [product]);
 
@@ -32,12 +28,12 @@ const ProductModal = ({ product, onSave, onClose }: ProductModalProps) => {
     e.preventDefault();
     setError('');
 
-    if (quantity < 0) {
+    if (remainingQty < 0) {
       setError('Quantity cannot be negative');
       return;
     }
 
-    if (price < 0) {
+    if (latestUnitPrice < 0) {
       setError('Price cannot be negative');
       return;
     }
@@ -47,10 +43,8 @@ const ProductModal = ({ product, onSave, onClose }: ProductModalProps) => {
     try {
       await onSave({
         name,
-        description,
-        quantity,
-        price,
-        category,
+        remainingQty,
+        latestUnitPrice,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save product');
@@ -70,7 +64,7 @@ const ProductModal = ({ product, onSave, onClose }: ProductModalProps) => {
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
-            <label htmlFor="name">Product Name</label>
+            <label htmlFor="name">Product Name *</label>
             <input
               id="name"
               type="text"
@@ -82,60 +76,38 @@ const ProductModal = ({ product, onSave, onClose }: ProductModalProps) => {
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="description">Description</label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              disabled={loading}
-              placeholder="Enter product description"
-              rows={3}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="category">Category</label>
-            <input
-              id="category"
-              type="text"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              required
-              disabled={loading}
-              placeholder="Enter category"
-            />
-          </div>
-
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="quantity">Quantity</label>
+              <label htmlFor="remainingQty">Remaining Quantity</label>
               <input
-                id="quantity"
+                id="remainingQty"
                 type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                required
+                value={remainingQty}
+                onChange={(e) => setRemainingQty(Number(e.target.value))}
                 disabled={loading}
                 min="0"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="price">Price ($)</label>
+              <label htmlFor="latestUnitPrice">Latest Unit Price ($)</label>
               <input
-                id="price"
+                id="latestUnitPrice"
                 type="number"
                 step="0.01"
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-                required
+                value={latestUnitPrice}
+                onChange={(e) => setLatestUnitPrice(Number(e.target.value))}
                 disabled={loading}
                 min="0"
               />
             </div>
           </div>
+          
+          {product && (
+            <small style={{ color: '#666', fontSize: '12px', marginTop: '10px', display: 'block' }}>
+              Note: Product details are typically updated through Product Batches. Use this form for manual adjustments only.
+            </small>
+          )}
 
           <div className="modal-actions">
             <button type="button" onClick={onClose} className="btn btn-secondary" disabled={loading}>
