@@ -1,27 +1,27 @@
-import axios from 'axios';
-import type { 
-  LoginRequest, 
-  SignupRequest, 
-  AuthResponse, 
-  Product, 
-  ProductCreateRequest, 
+import axios from "axios";
+import type {
+  LoginRequest,
+  SignupRequest,
+  AuthResponse,
+  Product,
+  ProductCreateRequest,
   ProductUpdateRequest,
-  User 
-} from '../types';
+  User,
+} from "../types";
 
-const API_BASE_URL = "http://43.205.208.47/api";
+const API_BASE_URL = "http://localhost:8080/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Request interceptor to add JWT token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -39,8 +39,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Clear authentication data on 401 errors
       // The app will redirect to login through the AuthContext
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
     }
     return Promise.reject(error);
   }
@@ -49,25 +49,25 @@ api.interceptors.response.use(
 // Authentication APIs
 export const authService = {
   login: async (credentials: LoginRequest): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/auth/login', credentials);
+    const response = await api.post<AuthResponse>("/auth/login", credentials);
     return response.data;
   },
 
   signup: async (userData: SignupRequest): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/auth/register', userData);
+    const response = await api.post<AuthResponse>("/auth/register", userData);
     return response.data;
   },
 
   logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
   },
 };
 
 // Product APIs
 export const productService = {
   getAllProducts: async (): Promise<Product[]> => {
-    const response = await api.get<Product[]>('/products');
+    const response = await api.get<Product[]>("/products");
     return response.data;
   },
 
@@ -77,11 +77,14 @@ export const productService = {
   },
 
   createProduct: async (product: ProductCreateRequest): Promise<Product> => {
-    const response = await api.post<Product>('/products', product);
+    const response = await api.post<Product>("/products", product);
     return response.data;
   },
 
-  updateProduct: async (id: number, product: ProductUpdateRequest): Promise<Product> => {
+  updateProduct: async (
+    id: number,
+    product: ProductUpdateRequest
+  ): Promise<Product> => {
     const response = await api.put<Product>(`/products/${id}`, product);
     return response.data;
   },
@@ -94,7 +97,7 @@ export const productService = {
 // User APIs
 export const userService = {
   getAllUsers: async (): Promise<User[]> => {
-    const response = await api.get<User[]>('/users');
+    const response = await api.get<User[]>("/users");
     return response.data;
   },
 
